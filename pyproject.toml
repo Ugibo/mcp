@@ -1,0 +1,14 @@
+[project]
+name = "ugibo-mcp"
+version = "0.1.0"
+description = "MCP server for the Ugibo platform: your projects, tasks, asks and invoices in any AI editor"
+authors = [{ name = "Ranit Bhowmick" }]
+requires-python = ">=3.12"
+dependencies = ["mcp>=2.3.0", "httpx>=0.28.1"]
+
+[project.scripts]
+ugibo-mcp = "ugibo_mcp.server:main"
+
+[build-system]
+requires = ["uv_build>=0.11.19,<0.12.0"]
+build-backend = "uv_build"
