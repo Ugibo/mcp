@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/readme/banner.jpg" alt="Ugibo in your AI editor" width="100%"></p>
+
 # Ugibo MCP server
 
 Your Ugibo projects, tasks, requests, documents and invoices inside any AI editor that
@@ -12,18 +14,21 @@ In Ugibo, open **Settings > API keys** and create one. The key is shown once, to
 with ready-to-paste setup for Claude Code, Cursor and VS Code, and a prompt you can give
 an AI agent so it sets the server up for itself.
 
-## Run it
+## Install and run
+
+It installs straight from this repository. It is not on PyPI, and does not need to be:
+[`uv`](https://docs.astral.sh/uv/) fetches it from GitHub and runs it in one step.
 
 ```bash
-UGIBO_API_URL=https://api.ugibo.com UGIBO_API_KEY=ugk_... uvx ugibo-mcp
+export UGIBO_API_URL=https://api.ugibo.com UGIBO_API_KEY=ugk_...
+uvx --from "git+https://github.com/Ugibo/mcp" ugibo-mcp
 ```
 
-Until the package is published, install from the repository instead (set the same source
-in the admin setting "MCP server" so new keys show the right command):
+To pin a version, add a tag or commit: `git+https://github.com/Ugibo/mcp@v0.1.0`.
+Prefer pip? `pip install "git+https://github.com/Ugibo/mcp"`, then run `ugibo-mcp`.
 
-```bash
-uvx --from "git+https://github.com/<org>/<repo>" ugibo-mcp
-```
+The setup that Ugibo shows when you create an API key uses this same command, ready to
+paste into Claude Code, Cursor or VS Code.
 
 ## Tools
 
@@ -63,3 +68,7 @@ uv build
 Set `UGIBO_API_KEY` and, when using a local API, `UGIBO_API_URL` before running.
 This repository is independent of the backend and communicates only through its HTTP API.
 For backend integration tests, clone this repository as `mcp/` beside the `backend/` checkout.
+
+---
+
+<p align="center"><img src=".github/readme/boo.png" alt="Boo, the Ugibo mascot" width="96"><br><sub>Made by Ugibo. Your projects, tasks and team memory, wherever you code.</sub></p>
