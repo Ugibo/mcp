@@ -16,6 +16,7 @@ from typing import Any
 
 import httpx
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
 
 INSTRUCTIONS = """Ugibo is a software firm's client platform: organizations (clients), engagements \
 (requests for work and the sales pipeline), projects with phases, milestones and tasks, \
@@ -48,7 +49,10 @@ class Api:
                 detail = r.json().get("detail")
             except ValueError:
                 detail = r.text[:300]
-            raise RuntimeError(f"Ugibo said {r.status_code}: {detail}")
+            # A ToolError reaches the agent with its message, so it can correct
+            # itself ("Unknown status"); any other exception arrives as a bare
+            # "Error executing tool".
+            raise ToolError(f"Ugibo said {r.status_code}: {detail}")
         return r.json() if r.content else {"ok": True}
 
 
@@ -229,7 +233,7 @@ def build(api: Api) -> MCPServer:
     async def set_task_status(task_id: str, status: str) -> dict:
         return await api.call("POST", f"/tasks/{task_id}/status", json={"status": status})
 
-    @server.tool(description="Comment on a task, optionally for a workflow stage (research, plan, build, test) and with links such as merge requests.")
+    @server.tool(description="Comment on a task, optionally for a workflow stage (research, plan, build, test) and with links such as merge requests. Returns the task with comment_id, the new comment's id for edit_comment.")
     async def comment_on_task(task_id: str, body: str, stage: str = "", links: list[str] | None = None) -> dict:
         return await api.call("POST", f"/tasks/{task_id}/comments", json={"body": body, "stage": stage, "links": [{"url": u} for u in links or []]})
 
