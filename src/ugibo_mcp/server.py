@@ -49,6 +49,10 @@ class Api:
                 detail = r.json().get("detail")
             except ValueError:
                 detail = r.text[:300]
+            # Field checks answer a list ([{loc, msg}, ...]); name each field
+            # in plain words instead of passing on the raw structure.
+            if isinstance(detail, list):
+                detail = "; ".join(f"{'.'.join(str(p) for p in e.get('loc', [])[1:]) or 'request'}: {e.get('msg', '')}" if isinstance(e, dict) else str(e) for e in detail)
             # A ToolError reaches the agent with its message, so it can correct
             # itself ("Unknown status"); any other exception arrives as a bare
             # "Error executing tool".
