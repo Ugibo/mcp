@@ -277,6 +277,28 @@ def build(api: Api) -> MCPServer:
     async def get_invoice(invoice_id: str) -> dict:
         return await api.call("GET", f"/invoices/{invoice_id}")
 
+    @server.tool(description="A project's billing plan: each line (on signing, at a milestone, on delivery, on a date, by hand, every month, every sprint) with its periods and their state: invoiced, drafted, due, upcoming or skipped.")
+    async def billing_plan(project_id: str) -> dict:
+        return await api.call("GET", f"/projects/{project_id}/billing")
+
+    @server.tool(description="Add a line to a project's billing plan. amount is before tax. trigger: signing, milestone (give trigger_ref, the milestone's name), delivery, date (give due_on YYYY-MM-DD), manual, monthly (due_on is the first month; blank starts with the project), sprint. count: how many months or sprints; blank until stopped. taxes: [{label, rate}] only if asked; nothing is added automatically.")
+    async def add_billing_line(project_id: str, label: str, amount: float, trigger: str = "manual", trigger_ref: str = "", due_on: str = "", count: int | None = None, taxes: list[dict] | None = None, remind: bool = True, client_visible: bool = True, note: str = "") -> dict:
+        body = clean({"label": label, "amount": amount, "trigger": trigger, "trigger_ref": trigger_ref, "due_on": due_on, "count": count, "note": note})
+        return await api.call("POST", f"/projects/{project_id}/billing/items", json={**body, "taxes": taxes or [], "remind": remind, "client_visible": client_visible})
+
+    @server.tool(description="Change a billing plan line. Send every field as it should be (read billing_plan first). stopped=true ends a monthly or sprint line; remind=false keeps it off Today; client_visible=false hides it from the client.")
+    async def update_billing_line(item_id: str, label: str, amount: float, trigger: str, trigger_ref: str = "", due_on: str = "", count: int | None = None, taxes: list[dict] | None = None, stopped: bool = False, remind: bool = True, client_visible: bool = True, note: str = "") -> dict:
+        body = {"label": label, "amount": amount, "trigger": trigger, "trigger_ref": trigger_ref, "due_on": due_on or None, "count": count, "taxes": taxes or [], "stopped": stopped, "remind": remind, "client_visible": client_visible, "note": note}
+        return await api.call("PUT", f"/billing-items/{item_id}", json=body)
+
+    @server.tool(description="Skip one period of a billing plan line (a month, a sprint, or 'once'), or skip=false to bill it after all.")
+    async def skip_billing_period(item_id: str, period: str = "once", skip: bool = True) -> dict:
+        return await api.call("POST", f"/billing-items/{item_id}/skip", json={"period": period, "skip": skip})
+
+    @server.tool(description="Draft the invoice for one period of a billing plan line (period from billing_plan: 'once', '2026-11', or a sprint's id). It stays a draft for a person to check and send.")
+    async def draft_invoice_from_plan(item_id: str, period: str = "once") -> dict:
+        return await api.call("POST", f"/billing-items/{item_id}/invoice", json={"period": period})
+
     @server.tool(description="Overdue invoices: who owes what, since when, who it was sent to and whether they viewed it.")
     async def overdue_invoices() -> dict:
         return await api.call("GET", "/metrics/overdue-invoices")
